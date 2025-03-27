@@ -76,18 +76,9 @@ def test_arx_model():
     regressor = Regressor(N_AR=N_AR)
     regressor.train(X, Y)
 
-    # Check one-at-a-time predictions
-    #X_hat, Y_hat = regressor.prepare_arx_data(X, Y)
-    #Y_pred = regressor.predict(X_hat)
-    #assert np.allclose(Y_hat, Y_pred)
+    # Check if the estimated theta is close to the true theta
+    assert np.allclose(regressor.theta, true_theta, atol=1e-2)
 
     # Check full model predictions
     Y_pred, T = regressor.predict(X[N_AR:], y0=Y[:N_AR])
-    from matplotlib import pyplot as plt
-    fig, ax = plt.subplots()
-    ax.plot(Y, label='True')
-    ax.plot(T, Y_pred, label='Predicted')
-    ax.legend()
-
-    # Check if the estimated theta is close to the true theta
-    assert np.allclose(regressor.theta, true_theta, atol=1e-2)
+    assert np.allclose(Y[N_AR:], Y_pred)

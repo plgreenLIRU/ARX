@@ -53,18 +53,21 @@ class Regressor:
             Y = X @ self.theta
         else:
             assert len(y0) == self.N_AR
+
             T = []
             Y = []
-            x = np.hstack([X[0], y0])
-            for t in range(self.N_AR, np.shape(X)[0]):
-                y = x @ self.theta
-                
+
+            for t in range(self.N_AR, np.shape(X)[0] + self.N_AR):
+
+                if t == self.N_AR:
+                    x = np.hstack([X[0], y0])
+                else:
+                    x[:self.D] = X[t - self.N_AR]
+                    x[self.D:] = np.roll(x[self.D:], 1)
+                    x[-1] = y
+
+                y = x @ self.theta                
                 T.append(t)
-                Y.append(y)
-
-                x[:self.D] = X[t]
-                x[self.D:] = np.roll(x[self.D:], 1)
-                x[-1] = y
-
+                Y.append(y[0])
 
         return Y, T
