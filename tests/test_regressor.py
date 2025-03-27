@@ -48,3 +48,33 @@ def test_prepare_arx_data():
     # Check values
     assert np.allclose(X_hat[0, :], np.hstack([X[2, :], Y[0:2]]))
     assert np.allclose(X_hat[1, :], np.hstack([X[3, :], Y[1:3]]))
+
+def test_arx_model():
+
+    np.random.seed(42)  # For reproducibility
+    D = 3  # Number of exogenous features
+    N = 100  # Number of samples
+    N_AR = 2  # Number of auto-regressive components
+
+    # Generate random exogenous inputs
+    X = np.random.rand(N, D)
+
+    # True coefficients for exogenous inputs and AR components
+    theta_exog = np.array([2.0, -1.0, 0.5]).reshape(-1, 1)  # Coefficients for exogenous inputs
+    theta_ar = np.array([0.8, -0.3]).reshape(-1, 1)         # Coefficients for AR components
+
+    # Generate target values with AR components
+    Y = np.zeros(N)
+    for t in range(N_AR, N):
+        Y[t] = (
+            X[t] @ theta_exog +  # Contribution from exogenous inputs
+            Y[t-N_AR : t] @ theta_ar  # Contribution from AR components
+        )
+
+    # Initialize and train the regressor
+    regressor = Regressor(N_AR=N_AR)
+    regressor.train(X, Y)
+
+    # Check if the estimated theta is close to the true theta
+    true_theta = np.vstack([theta_exog, theta_ar])
+    assert np.allclose(regressor.theta, true_theta, atol=1e-2)
