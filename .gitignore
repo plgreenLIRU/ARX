@@ -1,0 +1,10 @@
+# Ignore VS Code settings
+.vscode/
+ARXLR/.vscode/
+
+# Ignore Python cache files
+ARXLR/__pycache__/
+tests/__pycache__/
+
+# Ignore egg-info directory
+ARXLR.egg-info/
