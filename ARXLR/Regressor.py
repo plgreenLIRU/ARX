@@ -45,5 +45,26 @@ class Regressor:
         theta, info = cg(A, b)
         self.theta = np.vstack(theta)
 
-    def predict(self, X):
-        return X @ self.theta
+    def predict(self, X, y0=None):
+
+        assert np.shape(X)[1] == self.D
+
+        if self.N_AR == 0:
+            Y = X @ self.theta
+        else:
+            assert len(y0) == self.N_AR
+            T = []
+            Y = []
+            x = np.hstack([X[0], y0])
+            for t in range(self.N_AR, np.shape(X)[0]):
+                y = x @ self.theta
+                
+                T.append(t)
+                Y.append(y)
+
+                x[:self.D] = X[t]
+                x[self.D:] = np.roll(x[self.D:], 1)
+                x[-1] = y
+
+
+        return Y, T
