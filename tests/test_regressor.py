@@ -80,5 +80,5 @@ def test_arx_model():
     assert np.allclose(regressor.theta, true_theta, atol=1e-2)
 
     # Check full model predictions
-    Y_pred, T = regressor.predict(X[N_AR:], y0=Y[:N_AR])
+    Y_pred = regressor.predict(X[N_AR:], y0=Y[:N_AR])
     assert np.allclose(Y[N_AR:], Y_pred)

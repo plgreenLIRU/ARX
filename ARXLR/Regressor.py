@@ -54,9 +54,7 @@ class Regressor:
         else:
             assert len(y0) == self.N_AR
 
-            T = []
             Y = []
-
             for t in range(self.N_AR, np.shape(X)[0] + self.N_AR):
 
                 if t == self.N_AR:
@@ -67,7 +65,6 @@ class Regressor:
                     x[-1] = y
 
                 y = x @ self.theta                
-                T.append(t)
                 Y.append(y[0])
 
-        return Y, T
+        return Y
