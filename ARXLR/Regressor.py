@@ -4,12 +4,29 @@ from scipy.sparse.linalg import cg
 class Regressor:
 
     def __init__(self, N_AR=0):
+        """
+        Initialises the Regressor object.
+
+        Parameters:
+        N_AR (int): Number of auto-regressive terms to include. Default is 0.
+        """
         if not isinstance(N_AR, int):
             raise ValueError("N_AR must be an integer")
         self.N_AR = N_AR
 
     def prepare_arx_data(self, X, Y):
+        """
+        Prepares the ARX (Auto-Regressive with eXogenous inputs) data matrix.
 
+        Parameters:
+        X (numpy.ndarray): Exogenous input data of shape (N, D).
+        Y (numpy.ndarray): Target data of shape (N,).
+
+        Returns:
+        tuple: A tuple (X_hat, Y_hat) where:
+            - X_hat (numpy.ndarray): Combined AR and exogenous features.
+            - Y_hat (numpy.ndarray): Target values as a column vector.
+        """
         # Ensure Y is a column vector
         Y = Y.reshape(-1, 1) if Y.ndim == 1 else Y
 
@@ -27,7 +44,16 @@ class Regressor:
         return X_hat, Y_hat
 
     def train(self, X, Y):
+        """
+        Trains the regressor using the provided data.
 
+        Parameters:
+        X (numpy.ndarray): Input data of shape (N, D).
+        Y (numpy.ndarray): Target data of shape (N,).
+
+        Returns:
+        None
+        """
         # Ensure Y is a column vector
         Y = Y.reshape(-1, 1) if Y.ndim == 1 else Y
 
@@ -46,7 +72,17 @@ class Regressor:
         self.theta = np.vstack(theta)
 
     def predict(self, X, y0=None):
+        """
+        Predicts target values using the trained model.
 
+        Parameters:
+        X (numpy.ndarray): Input data of shape (N, D).
+        y0 (numpy.ndarray, optional): Initial auto-regressive terms of shape (N_AR,).
+                                      Required if N_AR > 0.
+
+        Returns:
+        numpy.ndarray: Predicted target values.
+        """
         assert np.shape(X)[1] == self.D
 
         if self.N_AR == 0:

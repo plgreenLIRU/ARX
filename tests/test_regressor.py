@@ -2,7 +2,13 @@ import numpy as np
 from ARXLR.Regressor import Regressor
 
 def test_linear_regression():
+    """
+    Tests the Regressor's ability to solve a simple linear regression problem.
 
+    This test creates a 3D linear regression problem with known coefficients,
+    trains the Regressor on the data, and verifies that the estimated coefficients
+    and predictions are close to the true values.
+    """
     # Create a simple 3D linear regression problem
     np.random.seed(42)  # For reproducibility
     D = 3  # Number of features
@@ -29,7 +35,13 @@ def test_linear_regression():
     assert np.allclose(Y, Y_pred)
 
 def test_prepare_arx_data():
+    """
+    Tests the `prepare_arx_data` method for generating ARX data matrices.
 
+    This test verifies that the method correctly combines exogenous inputs
+    and auto-regressive terms into the ARX data matrix, and ensures the
+    output shapes and values are as expected.
+    """
     np.random.seed(42)  # For reproducibility
     D = 3  # Number of features
     N = 4  # Number of samples
@@ -50,7 +62,13 @@ def test_prepare_arx_data():
     assert np.allclose(X_hat[1, :], np.hstack([X[3, :], Y[1:3]]))
 
 def test_arx_model():
+    """
+    Tests the Regressor's ability to handle ARX models with auto-regressive terms.
 
+    This test generates data with both exogenous inputs and auto-regressive
+    components, trains the Regressor, and verifies that the estimated coefficients
+    and predictions are close to the true values.
+    """
     np.random.seed(42)  # For reproducibility
     D = 3  # Number of exogenous features
     N = 100  # Number of samples
