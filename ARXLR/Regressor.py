@@ -3,7 +3,7 @@ from scipy.sparse.linalg import cg
 
 class Regressor:
 
-    def __init__(self, N_AR):
+    def __init__(self, N_AR=0):
         if not isinstance(N_AR, int):
             raise ValueError("N_AR must be an integer")
         self.N_AR = N_AR
@@ -18,7 +18,7 @@ class Regressor:
             ar_features.append(Y[t-self.N_AR:t])     # AR terms
             exog_features.append(X[t])       # Exogenous inputs
             targets.append(Y[t])             # Target value
-        X_hat = np.hstack([ar_features, exog_features])
+        X_hat = np.hstack([exog_features, ar_features])
         Y_hat = np.array(targets).reshape(-1, 1)  # Ensure Y_hat is a 2D column vector
 
         return X_hat, Y_hat
@@ -30,10 +30,9 @@ class Regressor:
 
         # Size checks
         self.N, self.D = np.shape(X)
-        assert Y.shape == (self.N, 1), "Y must be an N x 1 column vector"
-
+        assert Y.shape == (self.N, 1)
         if self.N_AR > 0:
-            pass
+            X, Y = self.prepare_arx_data(X, Y)
 
         # Form matrices
         A = X.T @ X
