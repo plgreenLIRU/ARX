@@ -61,7 +61,7 @@ def test_arx_model():
 
     # True coefficients for exogenous inputs and AR components
     theta_exog = np.array([2.0, -1.0, 0.5]).reshape(-1, 1)  # Coefficients for exogenous inputs
-    theta_ar = np.array([0.8, -0.3]).reshape(-1, 1)         # Coefficients for AR components
+    theta_ar = np.array([0.2, -0.1]).reshape(-1, 1)         # Coefficients for AR components
 
     # Generate target values with AR components
     Y = np.zeros(N)
@@ -74,6 +74,11 @@ def test_arx_model():
     # Initialize and train the regressor
     regressor = Regressor(N_AR=N_AR)
     regressor.train(X, Y)
+
+    # Check one-at-a-time predictions
+    X_hat, Y_hat = regressor.prepare_arx_data(X, Y)
+    Y_pred = regressor.predict(X_hat)
+    assert np.allclose(Y_hat, Y_pred)
 
     # Check if the estimated theta is close to the true theta
     true_theta = np.vstack([theta_exog, theta_ar])

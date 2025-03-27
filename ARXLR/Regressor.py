@@ -10,6 +10,9 @@ class Regressor:
 
     def prepare_arx_data(self, X, Y):
 
+        # Ensure Y is a column vector
+        Y = Y.reshape(-1, 1) if Y.ndim == 1 else Y
+
         # Initialise auto-regressive features, exogenous features and targets
         ar_features, exog_features, targets = [], [], []
 
