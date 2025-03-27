@@ -21,3 +21,6 @@ class Regressor:
         # Solve for theta using conjugate gradient
         theta, info = cg(A, b)
         self.theta = np.vstack(theta)
+
+    def predict(self, X):
+        return X @ self.theta

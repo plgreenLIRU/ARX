@@ -20,6 +20,10 @@ def test_linear_regression():
     # Initialize and train the regressor
     regressor = Regressor()
     regressor.train(X, Y)
+    Y_pred = regressor.predict(X)
 
     # Check if the estimated theta is close to the true theta
     assert np.allclose(regressor.theta, true_theta)
+
+    # Check predictions
+    assert np.allclose(Y, Y_pred)
