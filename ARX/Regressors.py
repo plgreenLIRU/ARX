@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.sparse.linalg import cg
 
-class Regressor:
+class LinearRegression:
 
     def __init__(self, N_AR=0):
         """

@@ -1,5 +1,5 @@
 import numpy as np
-from ARXLR.Regressor import Regressor
+from ARX.Regressors import LinearRegression
 
 def test_linear_regression():
     """
@@ -24,7 +24,7 @@ def test_linear_regression():
     Y = X @ true_theta
 
     # Initialize and train the regressor
-    regressor = Regressor()
+    regressor = LinearRegression()
     regressor.train(X, Y)
     Y_pred = regressor.predict(X)
 
@@ -36,7 +36,7 @@ def test_linear_regression():
 
 def test_prepare_arx_data():
     """
-    Tests the `prepare_arx_data` method for generating ARX data matrices.
+    Tests the `_prepare_arx_data` method for generating ARX data matrices.
 
     This test verifies that the method correctly combines exogenous inputs
     and auto-regressive terms into the ARX data matrix, and ensures the
@@ -50,8 +50,8 @@ def test_prepare_arx_data():
     X = np.random.rand(N, D)
     Y = np.random.rand(N)
 
-    regressor = Regressor(N_AR=2)
-    X_hat, Y_hat = regressor.prepare_arx_data(X, Y)
+    regressor = LinearRegression(N_AR=2)
+    X_hat, Y_hat = regressor._prepare_arx_data(X, Y)
 
     # Check shapes
     assert np.shape(X_hat) == (2, 5)
@@ -91,7 +91,7 @@ def test_arx_model():
         )
 
     # Initialize and train the regressor
-    regressor = Regressor(N_AR=N_AR)
+    regressor = LinearRegression(N_AR=N_AR)
     regressor.train(X, Y)
 
     # Check if the estimated theta is close to the true theta

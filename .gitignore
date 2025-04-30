@@ -7,4 +7,4 @@ ARXLR/__pycache__/
 tests/__pycache__/
 
 # Ignore egg-info directory
-ARXLR.egg-info/
+ARX.egg-info/
