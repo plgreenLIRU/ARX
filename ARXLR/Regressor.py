@@ -14,7 +14,7 @@ class Regressor:
             raise ValueError("N_AR must be an integer")
         self.N_AR = N_AR
 
-    def prepare_arx_data(self, X, Y):
+    def _prepare_arx_data(self, X, Y):
         """
         Prepares the ARX (Auto-Regressive with eXogenous inputs) data matrix.
 
@@ -61,7 +61,7 @@ class Regressor:
         self.N, self.D = np.shape(X)
         assert Y.shape == (self.N, 1)
         if self.N_AR > 0:
-            X, Y = self.prepare_arx_data(X, Y)
+            X, Y = self._prepare_arx_data(X, Y)
 
         # Form matrices
         A = X.T @ X
@@ -102,5 +102,6 @@ class Regressor:
 
                 y = x @ self.theta                
                 Y.append(y[0])
+            Y = np.array(Y)
 
         return Y
