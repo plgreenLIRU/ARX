@@ -1,5 +1,5 @@
 import numpy as np
-from ARX.Regressors import Linear
+from ARX.Regressors import Linear, ANN
 
 def test_linear_regression():
     """
@@ -61,7 +61,7 @@ def test_prepare_arx_data():
     assert np.allclose(X_hat[0, :], np.hstack([X[2, :], Y[0:2]]))
     assert np.allclose(X_hat[1, :], np.hstack([X[3, :], Y[1:3]]))
 
-def test_arx_model():
+def test_arx_linear_regression():
     """
     Tests the Regressor's ability to handle ARX models with auto-regressive terms.
 
@@ -96,6 +96,40 @@ def test_arx_model():
 
     # Check if the estimated theta is close to the true theta
     assert np.allclose(regressor.model.coef_, true_theta[:, 0], atol=1e-2)
+
+    # Check full model predictions
+    Y_pred = regressor.predict(X[N_AR:], y0=Y[:N_AR])
+    assert np.allclose(Y[N_AR:], Y_pred[:, 0])
+
+
+def test_arx_ann():
+    """
+    ...
+    """
+
+    np.random.seed(42)  # For reproducibility
+    D = 3  # Number of exogenous features
+    N = 100  # Number of samples
+    N_AR = 2  # Number of auto-regressive components
+
+    # Generate random exogenous inputs
+    X = np.random.rand(N, D)
+
+    # True coefficients for exogenous inputs and AR components
+    theta_exog = np.array([2.0, -1.0, 0.5]).reshape(-1, 1)  # Coefficients for exogenous inputs
+    theta_ar = np.array([0.2, -0.1]).reshape(-1, 1)         # Coefficients for AR components
+
+    # Generate target values with AR components
+    Y = np.zeros(N)
+    for t in range(N_AR, N):
+        Y[t] = (
+            X[t] @ theta_exog +  # Contribution from exogenous inputs
+            Y[t-N_AR : t] @ theta_ar  # Contribution from AR components
+        )
+
+    # Initialize and train the ann model
+    regressor = ANN(N_AR=N_AR)
+    regressor.train(X, Y)
 
     # Check full model predictions
     Y_pred = regressor.predict(X[N_AR:], y0=Y[:N_AR])
