@@ -1,9 +1,9 @@
 # Ignore VS Code settings
 .vscode/
-ARXLR/.vscode/
+ARX/.vscode/
 
 # Ignore Python cache files
-ARXLR/__pycache__/
+ARX/__pycache__/
 tests/__pycache__/
 
 # Ignore egg-info directory
