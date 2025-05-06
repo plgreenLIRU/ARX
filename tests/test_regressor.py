@@ -1,5 +1,5 @@
 import numpy as np
-from ARX.Regressors import LinearRegression
+from ARX.Regressors import Linear
 
 def test_linear_regression():
     """
@@ -24,12 +24,12 @@ def test_linear_regression():
     Y = X @ true_theta
 
     # Initialize and train the regressor
-    regressor = LinearRegression()
+    regressor = Linear()
     regressor.train(X, Y)
     Y_pred = regressor.predict(X)
 
     # Check if the estimated theta is close to the true theta
-    assert np.allclose(regressor.theta, true_theta)
+    assert np.allclose(regressor.model.coef_, true_theta[:, 0])
 
     # Check predictions
     assert np.allclose(Y, Y_pred)
@@ -50,7 +50,7 @@ def test_prepare_arx_data():
     X = np.random.rand(N, D)
     Y = np.random.rand(N)
 
-    regressor = LinearRegression(N_AR=2)
+    regressor = Linear(N_AR=2)
     X_hat, Y_hat = regressor._prepare_arx_data(X, Y)
 
     # Check shapes
@@ -91,12 +91,12 @@ def test_arx_model():
         )
 
     # Initialize and train the regressor
-    regressor = LinearRegression(N_AR=N_AR)
+    regressor = Linear(N_AR=N_AR)
     regressor.train(X, Y)
 
     # Check if the estimated theta is close to the true theta
-    assert np.allclose(regressor.theta, true_theta, atol=1e-2)
+    assert np.allclose(regressor.model.coef_, true_theta[:, 0], atol=1e-2)
 
     # Check full model predictions
     Y_pred = regressor.predict(X[N_AR:], y0=Y[:N_AR])
-    assert np.allclose(Y[N_AR:], Y_pred)
+    assert np.allclose(Y[N_AR:], Y_pred[:, 0])

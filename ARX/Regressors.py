@@ -1,18 +1,20 @@
 import numpy as np
 from scipy.sparse.linalg import cg
+from sklearn.linear_model import LinearRegression as SK_LinearRegression
+from sklearn.neural_network import MLPRegressor as SK_MLPRegressor
 
-class LinearRegression:
+class Base:
 
     def __init__(self, N_AR=0):
-        """
-        Initialises the Regressor object.
+            """
+            Initialises the Regressor object.
 
-        Parameters:
-        N_AR (int): Number of auto-regressive terms to include. Default is 0.
-        """
-        if not isinstance(N_AR, int):
-            raise ValueError("N_AR must be an integer")
-        self.N_AR = N_AR
+            Parameters:
+            N_AR (int): Number of auto-regressive terms to include. Default is 0.
+            """
+            if not isinstance(N_AR, int):
+                raise ValueError("N_AR must be an integer")
+            self.N_AR = N_AR
 
     def _prepare_arx_data(self, X, Y):
         """
@@ -43,6 +45,8 @@ class LinearRegression:
 
         return X_hat, Y_hat
 
+class Linear(Base):
+
     def train(self, X, Y):
         """
         Trains the regressor using the provided data.
@@ -63,13 +67,8 @@ class LinearRegression:
         if self.N_AR > 0:
             X, Y = self._prepare_arx_data(X, Y)
 
-        # Form matrices
-        A = X.T @ X
-        b = X.T @ Y
-
-        # Solve for theta using conjugate gradient
-        theta, info = cg(A, b)
-        self.theta = np.vstack(theta)
+        self.model = SK_LinearRegression()
+        self.model.fit(X, Y)
 
     def predict(self, X, y0=None):
         """
@@ -84,24 +83,48 @@ class LinearRegression:
         numpy.ndarray: Predicted target values.
         """
         assert np.shape(X)[1] == self.D
+        
 
         if self.N_AR == 0:
-            Y = X @ self.theta
+            Y = self.model.predict(X)
         else:
             assert len(y0) == self.N_AR
 
             Y = []
             for t in range(self.N_AR, np.shape(X)[0] + self.N_AR):
 
+                # First time step
                 if t == self.N_AR:
                     x = np.hstack([X[0], y0])
+                    
+                # Remaining time steps
                 else:
                     x[:self.D] = X[t - self.N_AR]
                     x[self.D:] = np.roll(x[self.D:], 1)
                     x[-1] = y
 
-                y = x @ self.theta                
-                Y.append(y[0])
+                y = self.model.predict(x.reshape(1, -1))[0]               
+                Y.append(y)
+
+            # Finish by converting Y to array
             Y = np.array(Y)
 
         return Y
+
+class ANN(Base):
+
+    def train(self, X, Y, hidden_layer_sizes):
+
+
+        # Check shapes; note we are only using ANNs with
+        # one output for now
+        N, D = np.shape(X)
+        assert np.shape(Y)[0] == N
+        assert np.shape(Y)[1] == 1
+
+        # Fit ann
+        self.model = SK_MLPRegressor(hidden_layer_sizes=hidden_layer_sizes)
+        self.model.fit(X, Y)
+
+    def predict(self, X, y0=None):
+        pass
