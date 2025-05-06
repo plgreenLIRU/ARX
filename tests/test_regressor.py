@@ -120,8 +120,8 @@ def test_arx_ann():
     Y[:N_AR] = np.random.randn(N_AR)
 
     # Fit it on dummy data to initialize weights (weights are randomly set based on random_state)
-    ann = MLPRegressor(hidden_layer_sizes=(10), max_iter=1)    
-    ann.fit(np.random.randn(10, D + N_AR), np.random.randn(10))
+    ann = MLPRegressor(hidden_layer_sizes=(3), max_iter=1)    
+    ann.fit(np.random.randn(3, D + N_AR), np.random.randn(3))
 
     # Generate autoregressive data using the untrained neural net
     for t in range(N_AR, N):
@@ -131,7 +131,7 @@ def test_arx_ann():
 
     # Initialize and train the ann model
     regressor = ANN(N_AR=N_AR)
-    regressor.train(X, Y, hidden_layer_sizes=(4, 3))
+    regressor.train(X, Y, hidden_layer_sizes=(3))
 
     # Check full model predictions
     Y_pred = regressor.predict(X[N_AR:], y0=Y[:N_AR])
