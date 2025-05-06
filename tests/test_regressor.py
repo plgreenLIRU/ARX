@@ -1,5 +1,6 @@
 import numpy as np
 from ARX.Regressors import Linear, ANN
+from sklearn.neural_network import MLPRegressor
 
 def test_linear_regression():
     """
@@ -101,7 +102,6 @@ def test_arx_linear_regression():
     Y_pred = regressor.predict(X[N_AR:], y0=Y[:N_AR])
     assert np.allclose(Y[N_AR:], Y_pred[:, 0])
 
-
 def test_arx_ann():
     """
     ...
@@ -115,21 +115,23 @@ def test_arx_ann():
     # Generate random exogenous inputs
     X = np.random.rand(N, D)
 
-    # True coefficients for exogenous inputs and AR components
-    theta_exog = np.array([2.0, -1.0, 0.5]).reshape(-1, 1)  # Coefficients for exogenous inputs
-    theta_ar = np.array([0.2, -0.1]).reshape(-1, 1)         # Coefficients for AR components
-
-    # Generate target values with AR components
+    # Random initialization for Y beginning
     Y = np.zeros(N)
+    Y[:N_AR] = np.random.randn(N_AR)
+
+    # Fit it on dummy data to initialize weights (weights are randomly set based on random_state)
+    ann = MLPRegressor(hidden_layer_sizes=(10), max_iter=1)    
+    ann.fit(np.random.randn(10, D + N_AR), np.random.randn(10))
+
+    # Generate autoregressive data using the untrained neural net
     for t in range(N_AR, N):
-        Y[t] = (
-            X[t] @ theta_exog +  # Contribution from exogenous inputs
-            Y[t-N_AR : t] @ theta_ar  # Contribution from AR components
-        )
+        x_ar = Y[t - N_AR:t]
+        x_full = np.concatenate([X[t], x_ar])
+        Y[t] = ann.predict(x_full.reshape(1, -1))[0]
 
     # Initialize and train the ann model
     regressor = ANN(N_AR=N_AR)
-    regressor.train(X, Y)
+    regressor.train(X, Y, hidden_layer_sizes=(4, 3))
 
     # Check full model predictions
     Y_pred = regressor.predict(X[N_AR:], y0=Y[:N_AR])

@@ -45,31 +45,6 @@ class Base:
 
         return X_hat, Y_hat
 
-class Linear(Base):
-
-    def train(self, X, Y):
-        """
-        Trains the regressor using the provided data.
-
-        Parameters:
-        X (numpy.ndarray): Input data of shape (N, D).
-        Y (numpy.ndarray): Target data of shape (N,).
-
-        Returns:
-        None
-        """
-        # Ensure Y is a column vector
-        Y = Y.reshape(-1, 1) if Y.ndim == 1 else Y
-
-        # Size checks
-        self.N, self.D = np.shape(X)
-        assert Y.shape == (self.N, 1)
-        if self.N_AR > 0:
-            X, Y = self._prepare_arx_data(X, Y)
-
-        self.model = SK_LinearRegression()
-        self.model.fit(X, Y)
-
     def predict(self, X, y0=None):
         """
         Predicts target values using the trained model.
@@ -111,15 +86,44 @@ class Linear(Base):
 
         return Y
 
+class Linear(Base):
+
+    def train(self, X, Y):
+        """
+        Trains the regressor using the provided data.
+
+        Parameters:
+        X (numpy.ndarray): Input data of shape (N, D).
+        Y (numpy.ndarray): Target data of shape (N,).
+
+        Returns:
+        None
+        """
+        # Ensure Y is a column vector
+        Y = Y.reshape(-1, 1) if Y.ndim == 1 else Y
+
+        # Size checks
+        self.N, self.D = np.shape(X)
+        assert Y.shape == (self.N, 1)
+        if self.N_AR > 0:
+            X, Y = self._prepare_arx_data(X, Y)
+
+        self.model = SK_LinearRegression()
+        self.model.fit(X, Y)
+
+
 class ANN(Base):
 
     def train(self, X, Y, hidden_layer_sizes):
 
-        # Check shapes; note we are only using ANNs with
-        # one output for now
-        N, D = np.shape(X)
-        assert np.shape(Y)[0] == N
-        assert np.shape(Y)[1] == 1
+        # Ensure Y is a column vector
+        Y = Y.reshape(-1, 1) if Y.ndim == 1 else Y
+
+        # Size checks
+        self.N, self.D = np.shape(X)
+        assert Y.shape == (self.N, 1)
+        if self.N_AR > 0:
+            X, Y = self._prepare_arx_data(X, Y)        
 
         # Fit ann
         self.model = SK_MLPRegressor(hidden_layer_sizes=hidden_layer_sizes)
