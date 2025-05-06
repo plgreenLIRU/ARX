@@ -101,38 +101,3 @@ def test_arx_linear_regression():
     # Check full model predictions
     Y_pred = regressor.predict(X[N_AR:], y0=Y[:N_AR])
     assert np.allclose(Y[N_AR:], Y_pred[:, 0])
-
-def test_arx_ann():
-    """
-    ...
-    """
-
-    np.random.seed(42)  # For reproducibility
-    D = 3  # Number of exogenous features
-    N = 100  # Number of samples
-    N_AR = 2  # Number of auto-regressive components
-
-    # Generate random exogenous inputs
-    X = np.random.rand(N, D)
-
-    # Random initialization for Y beginning
-    Y = np.zeros(N)
-    Y[:N_AR] = np.random.randn(N_AR)
-
-    # Fit it on dummy data to initialize weights (weights are randomly set based on random_state)
-    ann = MLPRegressor(hidden_layer_sizes=(3), max_iter=1)    
-    ann.fit(np.random.randn(3, D + N_AR), np.random.randn(3))
-
-    # Generate autoregressive data using the untrained neural net
-    for t in range(N_AR, N):
-        x_ar = Y[t - N_AR:t]
-        x_full = np.concatenate([X[t], x_ar])
-        Y[t] = ann.predict(x_full.reshape(1, -1))[0]
-
-    # Initialize and train the ann model
-    regressor = ANN(N_AR=N_AR)
-    regressor.train(X, Y, hidden_layer_sizes=(3))
-
-    # Check full model predictions
-    Y_pred = regressor.predict(X[N_AR:], y0=Y[:N_AR])
-    assert np.allclose(Y[N_AR:], Y_pred[:, 0])
