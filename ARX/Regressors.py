@@ -84,11 +84,11 @@ class Base:
             # Finish by converting Y to array
             Y = np.array(Y)
 
-        return Y
+        return np.vstack(Y)
 
 class Linear(Base):
 
-    def train(self, X, Y):
+    def train(self, X, Y, positive=False):
         """
         Trains the regressor using the provided data.
 
@@ -108,5 +108,21 @@ class Linear(Base):
         if self.N_AR > 0:
             X, Y = self._prepare_arx_data(X, Y)
 
-        self.model = SK_LinearRegression()
+        self.model = SK_LinearRegression(positive=positive)
         self.model.fit(X, Y)
+
+class ANN(Base):
+
+    def train(self, X, Y, hidden_layer_sizes):
+
+        # Ensure Y is a column vector
+        Y = Y.reshape(-1, 1) if Y.ndim == 1 else Y
+
+        # Size checks
+        self.N, self.D = np.shape(X)
+        assert Y.shape == (self.N, 1)
+        if self.N_AR > 0:
+            X, Y = self._prepare_arx_data(X, Y)
+
+        self.model = SK_MLPRegressor(hidden_layer_sizes=hidden_layer_sizes)
+        self.model.fit(X, Y[:, 0])
