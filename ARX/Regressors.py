@@ -115,7 +115,6 @@ class ANN(Base):
 
     def train(self, X, Y, hidden_layer_sizes):
 
-
         # Check shapes; note we are only using ANNs with
         # one output for now
         N, D = np.shape(X)
@@ -125,6 +124,3 @@ class ANN(Base):
         # Fit ann
         self.model = SK_MLPRegressor(hidden_layer_sizes=hidden_layer_sizes)
         self.model.fit(X, Y)
-
-    def predict(self, X, y0=None):
-        pass
