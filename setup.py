@@ -8,6 +8,6 @@ setup(
     description="Auto-regressive machine learning with exogeneous inputs",
     packages=find_packages(),
     install_requires=[
-        "numpy",
+        "numpy","scikit-learn"
     ],
 )
