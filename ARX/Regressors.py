@@ -16,34 +16,34 @@ class Base:
                 raise ValueError("N_AR must be an integer")
             self.N_AR = N_AR
 
-    def _prepare_arx_data(self, X, Y):
+    def _prepare_arx_data(self, X, y):
         """
         Prepares the ARX (Auto-Regressive with eXogenous inputs) data matrix.
 
         Parameters:
         X (numpy.ndarray): Exogenous input data of shape (N, D).
-        Y (numpy.ndarray): Target data of shape (N,).
+        y (numpy.ndarray): Target data of shape (N,).
 
         Returns:
         tuple: A tuple (X_hat, Y_hat) where:
             - X_hat (numpy.ndarray): Combined AR and exogenous features.
             - Y_hat (numpy.ndarray): Target values as a column vector.
         """
-        # Ensure Y is a column vector
-        Y = Y.reshape(-1, 1) if Y.ndim == 1 else Y
+        # Ensure y is a column vector
+        y = y.reshape(-1, 1) if y.ndim == 1 else y
 
         # Initialise auto-regressive features, exogenous features and targets
         ar_features, exog_features, targets = [], [], []
 
         # Create ARX data-matrix
-        for t in range(self.N_AR, len(Y)):
-            ar_features.append(Y[t-self.N_AR:t, 0])     # AR terms
+        for t in range(self.N_AR, len(y)):
+            ar_features.append(y[t-self.N_AR:t, 0])     # AR terms
             exog_features.append(X[t])       # Exogenous inputs
-            targets.append(Y[t])             # Target value
+            targets.append(y[t])             # Target value
         X_hat = np.hstack([exog_features, ar_features])
-        Y_hat = np.array(targets).reshape(-1, 1)  # Ensure Y_hat is a 2D column vector
+        y_hat = np.array(targets).reshape(-1, 1)  # Ensure Y_hat is a 2D column vector
 
-        return X_hat, Y_hat
+        return X_hat, y_hat
 
     def predict(self, X, y0=None):
         """
@@ -61,11 +61,11 @@ class Base:
         
 
         if self.N_AR == 0:
-            Y = self.model.predict(X)
+            y_pred = self.model.predict(X)
         else:
             assert len(y0) == self.N_AR
 
-            Y = []
+            y_pred = []
             for t in range(self.N_AR, np.shape(X)[0] + self.N_AR):
 
                 # First time step
@@ -79,50 +79,34 @@ class Base:
                     x[-1] = y
 
                 y = self.model.predict(x.reshape(1, -1))[0]               
-                Y.append(y)
+                y_pred.append(y)
 
             # Finish by converting Y to array
-            Y = np.array(Y)
+            y_pred = np.array(y_pred)
 
-        return np.vstack(Y)
+        return np.vstack(y_pred)
 
 class Linear(Base):
 
-    def train(self, X, Y, positive=False):
+    def train(self, X, y, positive=False):
         """
         Trains the regressor using the provided data.
 
         Parameters:
         X (numpy.ndarray): Input data of shape (N, D).
-        Y (numpy.ndarray): Target data of shape (N,).
+        y (numpy.ndarray): Target data of shape (N,).
 
         Returns:
         None
         """
-        # Ensure Y is a column vector
-        Y = Y.reshape(-1, 1) if Y.ndim == 1 else Y
+        # Ensure y is a column vector
+        y = y.reshape(-1, 1) if y.ndim == 1 else y
 
         # Size checks
         self.N, self.D = np.shape(X)
-        assert Y.shape == (self.N, 1)
+        assert y.shape == (self.N, 1)
         if self.N_AR > 0:
-            X, Y = self._prepare_arx_data(X, Y)
+            X, y = self._prepare_arx_data(X, y)
 
         self.model = SK_LinearRegression(positive=positive)
-        self.model.fit(X, Y)
-
-class ANN(Base):
-
-    def train(self, X, Y, hidden_layer_sizes):
-
-        # Ensure Y is a column vector
-        Y = Y.reshape(-1, 1) if Y.ndim == 1 else Y
-
-        # Size checks
-        self.N, self.D = np.shape(X)
-        assert Y.shape == (self.N, 1)
-        if self.N_AR > 0:
-            X, Y = self._prepare_arx_data(X, Y)
-
-        self.model = SK_MLPRegressor(hidden_layer_sizes=hidden_layer_sizes)
-        self.model.fit(X, Y[:, 0])
+        self.model.fit(X, y)
