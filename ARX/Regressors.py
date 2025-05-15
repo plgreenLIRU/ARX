@@ -113,7 +113,7 @@ class Linear(Base):
 
 class LinearBayes(Base):
 
-    def train(self, X, y, positive=False):
+    def train(self, X, y):
 
         # Ensure y is a column vector
         y = y.reshape(-1, 1) if y.ndim == 1 else y
@@ -127,29 +127,33 @@ class LinearBayes(Base):
         self.model = BayesianRidge()
         self.model.fit(X, y)
 
-    def predict(self, X, y0=None):
+    def predict(self, X, y0, N_MC=100):
 
         assert np.shape(X)[1] == self.D
         assert len(y0) == self.N_AR
 
-        y_pred = []
-        for t in range(self.N_AR, np.shape(X)[0] + self.N_AR):
+        Y_samples = np.zeros([np.shape(X)[0], N_MC])
 
-            # First time step
-            if t == self.N_AR:
-                x = np.hstack([X[0], y0])
-                
-            # Remaining time steps
-            else:
-                x[:self.D] = X[t - self.N_AR]
-                x[self.D:] = np.roll(x[self.D:], 1)
-                x[-1] = y_sample
+        for n in range(N_MC):
+            y_pred = []
+            for t in range(self.N_AR, np.shape(X)[0] + self.N_AR):
 
-            y_mean, y_std = self.model.predict(x.reshape(1, -1), return_std=True)
-            y_sample = y_mean + y_std * np.random.randn()           
-            y_pred.append(y_sample)
+                # First time step
+                if t == self.N_AR:
+                    x = np.hstack([X[0], y0])
+                    
+                # Remaining time steps
+                else:
+                    x[:self.D] = X[t - self.N_AR]
+                    x[self.D:] = np.roll(x[self.D:], 1)
+                    x[-1] = y_sample
 
-        # Finish by converting Y to array
-        y_pred = np.array(y_pred)
+                y_mean, y_std = self.model.predict(x.reshape(1, -1), return_std=True)
+                y_sample = y_mean + y_std * np.random.randn()           
+                y_pred.append(y_sample[0])
 
-        return np.vstack(y_pred)
+            # Add to samples
+            Y_samples[:, n] = y_pred
+        
+
+        return Y_samples
