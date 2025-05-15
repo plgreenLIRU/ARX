@@ -1,5 +1,29 @@
 import numpy as np
-from ARX.Regressors import Linear
+from ARX.Regressors import Linear, LinearBayes
+
+def generate_AR_data():
+
+    np.random.seed(42)  # For reproducibility
+    D = 3  # Number of exogenous features
+    N = 100  # Number of samples
+    N_AR = 2  # Number of auto-regressive components
+
+    # Generate random exogenous inputs
+    X = np.random.rand(N, D)
+
+    # True coefficients for exogenous inputs and AR components
+    theta_exog = np.array([2.0, -1.0, 0.5]).reshape(-1, 1)  # Coefficients for exogenous inputs
+    theta_ar = np.array([0.2, -0.1]).reshape(-1, 1)         # Coefficients for AR components
+    true_theta = np.vstack([theta_exog, theta_ar])
+
+    # Generate target values with AR components
+    y = np.zeros(N)
+    for t in range(N_AR, N):
+        y[t] = (
+            X[t] @ theta_exog +  # Contribution from exogenous inputs
+            y[t-N_AR : t] @ theta_ar  # Contribution from AR components
+        )
+    return X, y, N_AR, true_theta
 
 def test_linear_regression():
     """
@@ -69,34 +93,38 @@ def test_arx_linear_regression():
     components, trains the Regressor, and verifies that the estimated coefficients
     and predictions are close to the true values.
     """
-    np.random.seed(42)  # For reproducibility
-    D = 3  # Number of exogenous features
-    N = 100  # Number of samples
-    N_AR = 2  # Number of auto-regressive components
 
-    # Generate random exogenous inputs
-    X = np.random.rand(N, D)
-
-    # True coefficients for exogenous inputs and AR components
-    theta_exog = np.array([2.0, -1.0, 0.5]).reshape(-1, 1)  # Coefficients for exogenous inputs
-    theta_ar = np.array([0.2, -0.1]).reshape(-1, 1)         # Coefficients for AR components
-    true_theta = np.vstack([theta_exog, theta_ar])
-
-    # Generate target values with AR components
-    Y = np.zeros(N)
-    for t in range(N_AR, N):
-        Y[t] = (
-            X[t] @ theta_exog +  # Contribution from exogenous inputs
-            Y[t-N_AR : t] @ theta_ar  # Contribution from AR components
-        )
+    # Generate example data
+    X, y, N_AR, true_theta = generate_AR_data()
 
     # Initialize and train the regressor
     regressor = Linear(N_AR=N_AR)
-    regressor.train(X, Y)
+    regressor.train(X, y)
 
     # Check if the estimated theta is close to the true theta
     assert np.allclose(regressor.model.coef_, true_theta[:, 0], atol=1e-2)
 
     # Check full model predictions
-    Y_pred = regressor.predict(X[N_AR:], y0=Y[:N_AR])
-    assert np.allclose(Y[N_AR:], Y_pred[:, 0])
+    y_pred = regressor.predict(X[N_AR:], y0=y[:N_AR])
+    assert np.allclose(y[N_AR:], y_pred[:, 0])
+
+def test_arx_linear_Bayes():
+    
+    # Generate example data
+    X, y, N_AR, true_theta = generate_AR_data()
+
+    # Initialize and train the regressor
+    regressor = LinearBayes(N_AR=N_AR)
+    regressor.train(X, y)
+
+    # Check if the estimated theta is close to the true theta
+    assert np.allclose(regressor.model.coef_, true_theta[:, 0], atol=1e-2)
+
+    # Check full model predictions
+    Y_pred = regressor.predict(X[N_AR:], y0=y[:N_AR])
+    y_mean = np.mean(Y_pred, axis=1)
+    y_std = np.std(Y_pred, axis=1)
+
+    assert np.allclose(y[N_AR:], y_mean, atol=1e-4)
+    assert np.sum(y[N_AR:] < y_mean - 3 * y_std) == 0
+    assert np.sum(y[N_AR:] > y_mean + 3 * y_std) == 0
