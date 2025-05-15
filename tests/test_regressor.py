@@ -1,6 +1,5 @@
 import numpy as np
-from ARX.Regressors import Linear, ANN
-from sklearn.neural_network import MLPRegressor
+from ARX.Regressors import Linear
 
 def test_linear_regression():
     """
