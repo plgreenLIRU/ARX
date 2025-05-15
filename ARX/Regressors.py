@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.sparse.linalg import cg
 from sklearn.linear_model import LinearRegression as SK_LinearRegression
-from sklearn.neural_network import MLPRegressor as SK_MLPRegressor
+from sklearn.linear_model import BayesianRidge
 
 class Base:
 
@@ -110,3 +110,46 @@ class Linear(Base):
 
         self.model = SK_LinearRegression(positive=positive)
         self.model.fit(X, y)
+
+class LinearBayes(Base):
+
+    def train(self, X, y, positive=False):
+
+        # Ensure y is a column vector
+        y = y.reshape(-1, 1) if y.ndim == 1 else y
+
+        # Size checks
+        self.N, self.D = np.shape(X)
+        assert y.shape == (self.N, 1)
+        if self.N_AR > 0:
+            X, y = self._prepare_arx_data(X, y)
+
+        self.model = BayesianRidge()
+        self.model.fit(X, y)
+
+    def predict(self, X, y0=None):
+
+        assert np.shape(X)[1] == self.D
+        assert len(y0) == self.N_AR
+
+        y_pred = []
+        for t in range(self.N_AR, np.shape(X)[0] + self.N_AR):
+
+            # First time step
+            if t == self.N_AR:
+                x = np.hstack([X[0], y0])
+                
+            # Remaining time steps
+            else:
+                x[:self.D] = X[t - self.N_AR]
+                x[self.D:] = np.roll(x[self.D:], 1)
+                x[-1] = y_sample
+
+            y_mean, y_std = self.model.predict(x.reshape(1, -1), return_std=True)
+            y_sample = y_mean + y_std * np.random.randn()           
+            y_pred.append(y_sample)
+
+        # Finish by converting Y to array
+        y_pred = np.array(y_pred)
+
+        return np.vstack(y_pred)
