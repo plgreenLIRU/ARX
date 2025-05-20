@@ -19,10 +19,7 @@ def generate_AR_data():
     # Generate target values with AR components
     y = np.zeros(N)
     for t in range(N_AR, N):
-        y[t] = (
-            X[t] @ theta_exog +  # Contribution from exogenous inputs
-            y[t-N_AR : t] @ theta_ar  # Contribution from AR components
-        )
+        y[t] = (X[t] @ theta_exog + y[t-N_AR : t] @ theta_ar)[0]
     return X, y, N_AR, true_theta
 
 def test_linear_regression():
@@ -44,19 +41,19 @@ def test_linear_regression():
     # True coefficients
     true_theta = np.vstack(np.array([2.0, -1.0, 0.5]))
 
-    # Generate target values with some noise
-    Y = X @ true_theta
+    # Generate (1D) target values
+    y = (X @ true_theta)[:, 0]
 
     # Initialize and train the regressor
     regressor = Linear()
-    regressor.train(X, Y)
-    Y_pred = regressor.predict(X)
+    regressor.train(X, y)
+    y_pred = regressor.predict(X)
 
     # Check if the estimated theta is close to the true theta
     assert np.allclose(regressor.model.coef_, true_theta[:, 0])
 
     # Check predictions
-    assert np.allclose(Y, Y_pred)
+    assert np.allclose(y, y_pred)
 
 def test_prepare_arx_data():
     """
@@ -79,13 +76,13 @@ def test_prepare_arx_data():
 
     # Check shapes
     assert np.shape(X_hat) == (2, 5)
-    assert np.shape(Y_hat) == (2, 1)
+    assert np.shape(Y_hat) == (2,)
 
     # Check values
     assert np.allclose(X_hat[0, :], np.hstack([X[2, :], Y[0:2]]))
     assert np.allclose(X_hat[1, :], np.hstack([X[3, :], Y[1:3]]))
 
-def test_arx_linear_regression():
+def test_arx_linear():
     """
     Tests the Regressor's ability to handle ARX models with auto-regressive terms.
 
@@ -106,7 +103,7 @@ def test_arx_linear_regression():
 
     # Check full model predictions
     y_pred = regressor.predict(X[N_AR:], y0=y[:N_AR])
-    assert np.allclose(y[N_AR:], y_pred[:, 0])
+    assert np.allclose(y[N_AR:], y_pred)
 
 def test_arx_linear_Bayes():
     

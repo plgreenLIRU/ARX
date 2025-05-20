@@ -29,19 +29,19 @@ class Base:
             - X_hat (numpy.ndarray): Combined AR and exogenous features.
             - Y_hat (numpy.ndarray): Target values as a column vector.
         """
-        # Ensure y is a column vector
-        y = y.reshape(-1, 1) if y.ndim == 1 else y
+        # Check shapes
+        assert y.shape == (X.shape[0],)
 
         # Initialise auto-regressive features, exogenous features and targets
         ar_features, exog_features, targets = [], [], []
 
         # Create ARX data-matrix
         for t in range(self.N_AR, len(y)):
-            ar_features.append(y[t-self.N_AR:t, 0])     # AR terms
+            ar_features.append(y[t-self.N_AR:t])     # AR terms
             exog_features.append(X[t])       # Exogenous inputs
             targets.append(y[t])             # Target value
         X_hat = np.hstack([exog_features, ar_features])
-        y_hat = np.array(targets).reshape(-1, 1)  # Ensure Y_hat is a 2D column vector
+        y_hat = np.array(targets)
 
         return X_hat, y_hat
 
@@ -84,7 +84,7 @@ class Base:
             # Finish by converting Y to array
             y_pred = np.array(y_pred)
 
-        return np.vstack(y_pred)
+        return y_pred
 
 class Linear(Base):
 
@@ -99,12 +99,9 @@ class Linear(Base):
         Returns:
         None
         """
-        # Ensure y is a column vector
-        y = y.reshape(-1, 1) if y.ndim == 1 else y
-
         # Size checks
         self.N, self.D = np.shape(X)
-        assert y.shape == (self.N, 1)
+        assert y.shape == (self.N,)
         if self.N_AR > 0:
             X, y = self._prepare_arx_data(X, y)
 
@@ -115,12 +112,9 @@ class LinearBayes(Base):
 
     def train(self, X, y):
 
-        # Ensure y is a column vector
-        y = y.reshape(-1, 1) if y.ndim == 1 else y
-
         # Size checks
         self.N, self.D = np.shape(X)
-        assert y.shape == (self.N, 1)
+        assert y.shape == (self.N,)
         if self.N_AR > 0:
             X, y = self._prepare_arx_data(X, y)
 
@@ -146,7 +140,7 @@ class LinearBayes(Base):
                 else:
                     x[:self.D] = X[t - self.N_AR]
                     x[self.D:] = np.roll(x[self.D:], 1)
-                    x[-1] = y_sample
+                    x[-1] = y_sample[0]
 
                 y_mean, y_std = self.model.predict(x.reshape(1, -1), return_std=True)
                 y_sample = y_mean + y_std * np.random.randn()           
