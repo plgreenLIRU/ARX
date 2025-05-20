@@ -37,7 +37,7 @@ class Base:
 
         # Create ARX data-matrix
         for t in range(self.N_AR, len(y)):
-            ar_features.append(y[t-self.N_AR:t, 0])     # AR terms
+            ar_features.append(y[t-self.N_AR:t])     # AR terms
             exog_features.append(X[t])       # Exogenous inputs
             targets.append(y[t])             # Target value
         X_hat = np.hstack([exog_features, ar_features])

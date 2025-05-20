@@ -79,13 +79,13 @@ def test_prepare_arx_data():
 
     # Check shapes
     assert np.shape(X_hat) == (2, 5)
-    assert np.shape(Y_hat) == (2, 1)
+    assert np.shape(Y_hat) == (2,)
 
     # Check values
     assert np.allclose(X_hat[0, :], np.hstack([X[2, :], Y[0:2]]))
     assert np.allclose(X_hat[1, :], np.hstack([X[3, :], Y[1:3]]))
 
-def test_arx_linear_regression():
+def test_arx_linear():
     """
     Tests the Regressor's ability to handle ARX models with auto-regressive terms.
 
@@ -106,7 +106,7 @@ def test_arx_linear_regression():
 
     # Check full model predictions
     y_pred = regressor.predict(X[N_AR:], y0=y[:N_AR])
-    assert np.allclose(y[N_AR:], y_pred[:, 0])
+    assert np.allclose(y[N_AR:], y_pred)
 
 def test_arx_linear_Bayes():
     
