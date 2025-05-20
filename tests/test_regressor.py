@@ -19,10 +19,7 @@ def generate_AR_data():
     # Generate target values with AR components
     y = np.zeros(N)
     for t in range(N_AR, N):
-        y[t] = (
-            X[t] @ theta_exog +  # Contribution from exogenous inputs
-            y[t-N_AR : t] @ theta_ar  # Contribution from AR components
-        )
+        y[t] = (X[t] @ theta_exog + y[t-N_AR : t] @ theta_ar)[0]
     return X, y, N_AR, true_theta
 
 def test_linear_regression():

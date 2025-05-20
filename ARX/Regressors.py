@@ -140,7 +140,7 @@ class LinearBayes(Base):
                 else:
                     x[:self.D] = X[t - self.N_AR]
                     x[self.D:] = np.roll(x[self.D:], 1)
-                    x[-1] = y_sample
+                    x[-1] = y_sample[0]
 
                 y_mean, y_std = self.model.predict(x.reshape(1, -1), return_std=True)
                 y_sample = y_mean + y_std * np.random.randn()           
