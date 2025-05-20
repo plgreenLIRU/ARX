@@ -44,19 +44,19 @@ def test_linear_regression():
     # True coefficients
     true_theta = np.vstack(np.array([2.0, -1.0, 0.5]))
 
-    # Generate target values with some noise
-    Y = X @ true_theta
+    # Generate (1D) target values
+    y = (X @ true_theta)[:, 0]
 
     # Initialize and train the regressor
     regressor = Linear()
-    regressor.train(X, Y)
-    Y_pred = regressor.predict(X)
+    regressor.train(X, y)
+    y_pred = regressor.predict(X)
 
     # Check if the estimated theta is close to the true theta
     assert np.allclose(regressor.model.coef_, true_theta[:, 0])
 
     # Check predictions
-    assert np.allclose(Y, Y_pred)
+    assert np.allclose(y, y_pred)
 
 def test_prepare_arx_data():
     """
