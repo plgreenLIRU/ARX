@@ -132,15 +132,15 @@ class LinearBayes(Base):
 
             # First time step
             if t == self.N_AR:
-                x = np.tile(np.hstack([X[0], y0]), (N_MC, 1))
+                U = np.tile(np.hstack([X[0], y0]), (N_MC, 1))
                 
             # Remaining time steps
             else:
-                x[:self.D] = X[t - self.N_AR]
-                x[self.D:] = np.roll(x[self.D:], 1)
-                x[-1] = y_sample[0]
+                U[:, :self.D] = np.tile(X[t - self.N_AR], (N_MC, 1))
+                U[:, self.D:] = np.roll(U[:, self.D:], shift=1, axis=1)
+                U[:, -1] = Y_samples[t - self.N_AR - 1]
 
-            y_mean, y_std = self.model.predict(x, return_std=True)
-            Y_samples[t - self.N_AR] = np.random.normal(loc=y_mean, scale=y_std)
+            Y_mean, Y_std = self.model.predict(U, return_std=True)
+            Y_samples[t - self.N_AR] = np.random.normal(loc=Y_mean, scale=Y_std)
 
         return Y_samples
