@@ -121,7 +121,7 @@ class LinearBayes(Base):
         self.model = BayesianRidge()
         self.model.fit(X, y)
 
-    def predict(self, X, y0, N_MC=20):
+    def predict(self, X, y0, N_MC=100):
 
         assert np.shape(X)[1] == self.D
         assert len(y0) == self.N_AR
