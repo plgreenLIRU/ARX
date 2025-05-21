@@ -70,15 +70,15 @@ class Base:
 
                 # First time step
                 if t == self.N_AR:
-                    x = np.hstack([X[0], y0])
+                    u = np.hstack([X[0], y0])
                     
                 # Remaining time steps
                 else:
-                    x[:self.D] = X[t - self.N_AR]
-                    x[self.D:] = np.roll(x[self.D:], 1)
-                    x[-1] = y
+                    u[:self.D] = X[t - self.N_AR]
+                    u[self.D:] = np.roll(u[self.D:], 1)
+                    u[-1] = y
 
-                y = self.model.predict(x.reshape(1, -1))[0]               
+                y = self.model.predict(u.reshape(1, -1))[0]               
                 y_pred.append(y)
 
             # Finish by converting Y to array
