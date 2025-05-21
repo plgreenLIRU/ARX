@@ -70,15 +70,15 @@ class Base:
 
                 # First time step
                 if t == self.N_AR:
-                    x = np.hstack([X[0], y0])
+                    u = np.hstack([X[0], y0])
                     
                 # Remaining time steps
                 else:
-                    x[:self.D] = X[t - self.N_AR]
-                    x[self.D:] = np.roll(x[self.D:], 1)
-                    x[-1] = y
+                    u[:self.D] = X[t - self.N_AR]
+                    u[self.D:] = np.roll(u[self.D:], 1)
+                    u[-1] = y
 
-                y = self.model.predict(x.reshape(1, -1))[0]               
+                y = self.model.predict(u.reshape(1, -1))[0]               
                 y_pred.append(y)
 
             # Finish by converting Y to array
@@ -128,26 +128,19 @@ class LinearBayes(Base):
 
         Y_samples = np.zeros([np.shape(X)[0], N_MC])
 
-        for n in range(N_MC):
-            y_pred = []
-            for t in range(self.N_AR, np.shape(X)[0] + self.N_AR):
+        for t in range(self.N_AR, np.shape(X)[0] + self.N_AR):
 
-                # First time step
-                if t == self.N_AR:
-                    x = np.hstack([X[0], y0])
-                    
-                # Remaining time steps
-                else:
-                    x[:self.D] = X[t - self.N_AR]
-                    x[self.D:] = np.roll(x[self.D:], 1)
-                    x[-1] = y_sample[0]
+            # First time step
+            if t == self.N_AR:
+                U = np.tile(np.hstack([X[0], y0]), (N_MC, 1))
+                
+            # Remaining time steps
+            else:
+                U[:, :self.D] = np.tile(X[t - self.N_AR], (N_MC, 1))
+                U[:, self.D:] = np.roll(U[:, self.D:], shift=1, axis=1)
+                U[:, -1] = Y_samples[t - self.N_AR - 1]
 
-                y_mean, y_std = self.model.predict(x.reshape(1, -1), return_std=True)
-                y_sample = y_mean + y_std * np.random.randn()           
-                y_pred.append(y_sample[0])
-
-            # Add to samples
-            Y_samples[:, n] = y_pred
-        
+            Y_mean, Y_std = self.model.predict(U, return_std=True)
+            Y_samples[t - self.N_AR] = np.random.normal(loc=Y_mean, scale=Y_std)
 
         return Y_samples
