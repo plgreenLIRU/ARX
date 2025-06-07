@@ -121,26 +121,29 @@ class LinearBayes(Base):
         self.model = BayesianRidge()
         self.model.fit(X, y)
 
-    def predict(self, X, y0, N_MC=100):
+    def predict(self, X, y0=None, N_MC=100):
 
         assert np.shape(X)[1] == self.D
-        assert len(y0) == self.N_AR
 
-        Y_samples = np.zeros([np.shape(X)[0], N_MC])
+        if self.N_AR == 0:
+            y_mean, y_std = self.model.predict(X, return_std=True)
+            return y_mean, y_std
+        else:
+            assert len(y0) == self.N_AR
+            Y_samples = np.zeros([np.shape(X)[0], N_MC])
+            for t in range(self.N_AR, np.shape(X)[0] + self.N_AR):
 
-        for t in range(self.N_AR, np.shape(X)[0] + self.N_AR):
+                # First time step
+                if t == self.N_AR:
+                    U = np.tile(np.hstack([X[0], y0]), (N_MC, 1))
+                    
+                # Remaining time steps
+                else:
+                    U[:, :self.D] = np.tile(X[t - self.N_AR], (N_MC, 1))
+                    U[:, self.D:] = np.roll(U[:, self.D:], shift=1, axis=1)
+                    U[:, -1] = Y_samples[t - self.N_AR - 1]
 
-            # First time step
-            if t == self.N_AR:
-                U = np.tile(np.hstack([X[0], y0]), (N_MC, 1))
-                
-            # Remaining time steps
-            else:
-                U[:, :self.D] = np.tile(X[t - self.N_AR], (N_MC, 1))
-                U[:, self.D:] = np.roll(U[:, self.D:], shift=1, axis=1)
-                U[:, -1] = Y_samples[t - self.N_AR - 1]
+                Y_mean, Y_std = self.model.predict(U, return_std=True)
+                Y_samples[t - self.N_AR] = np.random.normal(loc=Y_mean, scale=Y_std)
 
-            Y_mean, Y_std = self.model.predict(U, return_std=True)
-            Y_samples[t - self.N_AR] = np.random.normal(loc=Y_mean, scale=Y_std)
-
-        return Y_samples
+            return Y_samples
