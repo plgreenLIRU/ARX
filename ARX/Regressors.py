@@ -120,11 +120,6 @@ class Linear(Base):
         # Size checks
         self.N, self.D = np.shape(X)
         assert y.shape == (self.N,)
-        if self.N_AR > 0:
-            X, y = self._prepare_arx_data(X, y)
-
-        # Initialise
-        self.model = SK_LinearRegression(positive=positive)
         
         # Apply basis function
         if self.basis is None:
@@ -135,7 +130,14 @@ class Linear(Base):
             kmeans.fit(X)
             self.centres = kmeans.cluster_centers_
             Phi = self._se_basis(X, self.centres)
-        
+
+        # Get data into auto-regressive format
+        if self.N_AR > 0:
+            Phi, y = self._prepare_arx_data(Phi, y)
+
+        # Initialise
+        self.model = SK_LinearRegression(positive=positive)
+
         # Train model parameters
         self.model.fit(Phi, y)
 
