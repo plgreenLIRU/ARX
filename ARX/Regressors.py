@@ -94,7 +94,7 @@ class Base:
         return y_pred
 
     def _se_basis(self, X, centres, width=1):
-        dists = np.linalg.norm(X[:, np.newaxis, :] - centers[np.newaxis, :, :], axis=2)
+        dists = np.linalg.norm(X[:, np.newaxis, :] - centres[np.newaxis, :, :], axis=2)
         return np.exp(-0.5 * (dists / width) ** 2)
 
 class Linear(Base):

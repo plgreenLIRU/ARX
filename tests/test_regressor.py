@@ -1,5 +1,6 @@
 import numpy as np
 from ARX.Regressors import Linear, LinearBayes
+from sklearn.metrics import mean_squared_error
 
 def generate_AR_data():
 
@@ -128,10 +129,30 @@ def test_arx_linear_Bayes():
 
 
 def test_se_basis_linear():
-    
+
     # Fix seed
     np.random.seed(42)
-    
+        
     # Sample 2D data
     X = np.random.uniform(0, 5, size=(100, 2))
     y = np.sin(X[:, 0]) + np.cos(X[:, 1]) + 0.1 * np.random.randn(100)
+        
+    model = Linear(N_AR=0, basis='se')
+    model.train(X, y)
+
+    '''
+    x1, x2 = np.meshgrid(np.linspace(0, 5, 50), np.linspace(0, 5, 50))
+    X_test = np.column_stack([x1.ravel(), x2.ravel()])
+    y_pred = model.predict(X_test).reshape(50, 50)
+
+
+    from matplotlib import pyplot as plt
+    fig = plt.figure(figsize=(6, 5))
+    ax = fig.add_subplot(111, projection='3d')
+    ax.plot_surface(x1, x2, y_pred, cmap='viridis', alpha=0.8)
+    ax.scatter(X[:, 0], X[:, 1], y, color='red', label='Training data')
+    ax.set_title("SE Basis Regression (2D)")
+    plt.legend()
+    '''
+    y_pred = model.predict(X)
+    assert mean_squared_error(y_pred, y) < 0.05
