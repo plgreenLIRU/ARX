@@ -93,19 +93,23 @@ class Base:
 
         return y_pred
 
-    def _se_basis(self, X, centres, width=1):
+    def _se_basis(self, X, centres):
+        width = 1
         dists = np.linalg.norm(X[:, np.newaxis, :] - centres[np.newaxis, :, :], axis=2)
         return np.exp(-0.5 * (dists / width) ** 2)
 
 class Linear(Base):
 
-    def train(self, X, y, positive=False):
+    def train(self, X, y, positive=False, **kwargs):
         """
         Trains the regressor using the provided data.
 
         Parameters:
         X (numpy.ndarray): Input data of shape (N, D).
         y (numpy.ndarray): Target data of shape (N,).
+        positive : if true, restricts all parameters to be positive
+        n_clusters : only relevant if using the squared exponential basis function;
+            is the number of cluster centres we look for in k-means
 
         Returns:
         None
@@ -123,7 +127,8 @@ class Linear(Base):
         if self.basis is None:
             Phi = X
         if self.basis is "se":
-            n_clusters = 10
+            n_clusters = kwargs.get('n_clusters', 10)
+            print(n_clusters)
             kmeans = KMeans(n_clusters=n_clusters, n_init=10)
             kmeans.fit(X)
             self.centres = kmeans.cluster_centers_
