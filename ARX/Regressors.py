@@ -64,8 +64,9 @@ class Base:
         # Apply basis function
         if self.basis is None:
             Phi = X
-        if self.basis is "se":
+        if self.basis == "se":
             Phi = self._se_basis(X, self.centres)        
+        basis_dim = Phi.shape[1]
 
         if self.N_AR == 0:
             y_pred = self.model.predict(Phi)
@@ -78,11 +79,11 @@ class Base:
                 # First time step
                 if t == self.N_AR:
                     u = np.hstack([Phi[0], y0])
-                    
+
                 # Remaining time steps
                 else:
-                    u[:self.D] = Phi[t - self.N_AR]
-                    u[self.D:] = np.roll(u[self.D:], 1)
+                    u[:basis_dim] = Phi[t - self.N_AR]
+                    u[basis_dim:] = np.roll(u[basis_dim:], 1)
                     u[-1] = y
 
                 y = self.model.predict(u.reshape(1, -1))[0]               
@@ -94,6 +95,8 @@ class Base:
         return y_pred
 
     def _se_basis(self, X, centres):
+        """ Squared exponential basis function
+        """
         width = 1
         dists = np.linalg.norm(X[:, np.newaxis, :] - centres[np.newaxis, :, :], axis=2)
         return np.exp(-0.5 * (dists / width) ** 2)
@@ -126,9 +129,8 @@ class Linear(Base):
         # Apply basis function
         if self.basis is None:
             Phi = X
-        if self.basis is "se":
+        if self.basis == "se":
             n_clusters = kwargs.get('n_clusters', 10)
-            print(n_clusters)
             kmeans = KMeans(n_clusters=n_clusters, n_init=10)
             kmeans.fit(X)
             self.centres = kmeans.cluster_centers_
