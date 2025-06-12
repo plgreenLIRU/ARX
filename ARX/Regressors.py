@@ -2,10 +2,11 @@ import numpy as np
 from scipy.sparse.linalg import cg
 from sklearn.linear_model import LinearRegression as SK_LinearRegression
 from sklearn.linear_model import BayesianRidge
+from sklearn.cluster import KMeans
 
 class Base:
 
-    def __init__(self, N_AR):
+    def __init__(self, N_AR, basis=None):
             """
             Initialises the Regressor object.
 
@@ -15,6 +16,7 @@ class Base:
             if not isinstance(N_AR, int):
                 raise ValueError("N_AR must be an integer")
             self.N_AR = N_AR
+            self.basis = basis
 
     def _prepare_arx_data(self, X, y):
         """
@@ -86,6 +88,10 @@ class Base:
 
         return y_pred
 
+    def _se_basis(self, X, centres, width=1):
+        dists = np.linalg.norm(X[:, np.newaxis, :] - centers[np.newaxis, :, :], axis=2)
+        return np.exp(-0.5 * (dists / width) ** 2)
+
 class Linear(Base):
 
     def train(self, X, y, positive=False):
@@ -105,8 +111,21 @@ class Linear(Base):
         if self.N_AR > 0:
             X, y = self._prepare_arx_data(X, y)
 
+        # Initialise
         self.model = SK_LinearRegression(positive=positive)
-        self.model.fit(X, y)
+        
+        # Apply basis function
+        if self.basis is None:
+            Phi = X
+        if self.basis is "squared exponential":
+            n_clusters = 10
+            kmeans = KMeans(n_clusters=n_clusters, n_init=10)
+            kmeans.fit(X)
+            self.centres = kmeans.cluster_centers_
+            Phi = self._se_basis(X, self.centres)
+        
+        # Train model parameters
+        self.model.fit(Phi, y)
 
 class LinearBayes(Base):
 
