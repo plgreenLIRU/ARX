@@ -45,7 +45,7 @@ def test_linear_regression():
     y = (X @ true_theta)[:, 0]
 
     # Initialize and train the regressor
-    regressor = Linear()
+    regressor = Linear(N_AR=0)
     regressor.train(X, y)
     y_pred = regressor.predict(X)
 
