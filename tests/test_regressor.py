@@ -106,6 +106,23 @@ def test_arx_linear():
     y_pred = regressor.predict(X[N_AR:], y0=y[:N_AR])
     assert np.allclose(y[N_AR:], y_pred)
 
+def test_arx_se_basis():
+    """
+    Tests the Regressor's ability to handle ARX models with auto-regressive terms
+    and using squared-exponential basis functions.
+    """
+
+    # Generate example data
+    X, y, N_AR, true_theta = generate_AR_data()
+
+    # Initialize and train the regressor
+    regressor = Linear(N_AR=N_AR, basis='se')
+    regressor.train(X, y)
+
+    # Check full model predictions
+    y_pred = regressor.predict(X[N_AR:], y0=y[:N_AR])
+    np.allclose(y[N_AR:], y_pred, atol=0.1)
+
 def test_arx_linear_Bayes():
     
     # Generate example data
