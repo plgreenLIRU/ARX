@@ -5,7 +5,7 @@ from sklearn.linear_model import BayesianRidge
 
 class Base:
 
-    def __init__(self, N_AR=0):
+    def __init__(self, N_AR):
             """
             Initialises the Regressor object.
 
