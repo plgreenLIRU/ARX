@@ -60,23 +60,28 @@ class Base:
         numpy.ndarray: Predicted target values.
         """
         assert np.shape(X)[1] == self.D
-        
+
+        # Apply basis function
+        if self.basis is None:
+            Phi = X
+        if self.basis is "se":
+            Phi = self._se_basis(X, self.centres)        
 
         if self.N_AR == 0:
-            y_pred = self.model.predict(X)
+            y_pred = self.model.predict(Phi)
         else:
             assert len(y0) == self.N_AR
 
             y_pred = []
-            for t in range(self.N_AR, np.shape(X)[0] + self.N_AR):
+            for t in range(self.N_AR, np.shape(Phi)[0] + self.N_AR):
 
                 # First time step
                 if t == self.N_AR:
-                    u = np.hstack([X[0], y0])
+                    u = np.hstack([Phi[0], y0])
                     
                 # Remaining time steps
                 else:
-                    u[:self.D] = X[t - self.N_AR]
+                    u[:self.D] = Phi[t - self.N_AR]
                     u[self.D:] = np.roll(u[self.D:], 1)
                     u[-1] = y
 
@@ -117,7 +122,7 @@ class Linear(Base):
         # Apply basis function
         if self.basis is None:
             Phi = X
-        if self.basis is "squared exponential":
+        if self.basis is "se":
             n_clusters = 10
             kmeans = KMeans(n_clusters=n_clusters, n_init=10)
             kmeans.fit(X)

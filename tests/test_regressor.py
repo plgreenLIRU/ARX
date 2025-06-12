@@ -125,3 +125,13 @@ def test_arx_linear_Bayes():
     assert np.allclose(y[N_AR:], y_mean, atol=1e-4)
     assert np.sum(y[N_AR:] < y_mean - 3 * y_std) == 0
     assert np.sum(y[N_AR:] > y_mean + 3 * y_std) == 0
+
+
+def test_se_basis_linear():
+    
+    # Fix seed
+    np.random.seed(42)
+    
+    # Sample 2D data
+    X = np.random.uniform(0, 5, size=(100, 2))
+    y = np.sin(X[:, 0]) + np.cos(X[:, 1]) + 0.1 * np.random.randn(100)
