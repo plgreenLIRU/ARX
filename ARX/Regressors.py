@@ -98,8 +98,8 @@ class Base:
 
         return y_pred
 
-    def _se_basis(self, X, centres, width=1):
-        """ Squared exponential basis function (with width=1 as default)
+    def _se_basis(self, X, centres, width):
+        """ Squared exponential basis function
         """
         dists = np.linalg.norm(X[:, np.newaxis, :] - centres[np.newaxis, :, :], axis=2)
         return np.exp(-0.5 * (dists / width) ** 2)
@@ -128,11 +128,8 @@ class Linear(Base):
         if self.basis is None:
             Phi = X
         if self.basis == "se":
-            n_clusters = kwargs.get('n_clusters', 10)
-            kmeans = KMeans(n_clusters=n_clusters, n_init=10)
-            kmeans.fit(X)
-            self.centres = kmeans.cluster_centers_
-            Phi = self._se_basis(X, self.centres)
+            self.centres = kwargs['centres']
+            Phi = self._se_basis(X, centres=self.centres, width=kwargs['width'])
 
         # Get data into auto-regressive format
         if self.N_AR > 0:
