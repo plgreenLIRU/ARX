@@ -144,7 +144,6 @@ def test_arx_linear_Bayes():
     assert np.sum(y[N_AR:] < y_mean - 3 * y_std) == 0
     assert np.sum(y[N_AR:] > y_mean + 3 * y_std) == 0
 
-
 def test_se_basis_linear():
 
     # Fix seed

@@ -11,7 +11,8 @@ class Base:
             Initialises the Regressor object.
 
             Parameters:
-            N_AR (int): Number of auto-regressive terms to include. Default is 0.
+            N_AR (int) : Number of auto-regressive terms to include.
+            basis : is None or "se" for squared exponential
             """
             if not isinstance(N_AR, int):
                 raise ValueError("N_AR must be an integer")
@@ -64,9 +65,12 @@ class Base:
         # Apply basis function
         if self.basis is None:
             Phi = X
-        if self.basis == "se":
-            Phi = self._se_basis(X, self.centres)        
+        elif self.basis == "se":
+            Phi = self._se_basis(X, self.centres)
+        else:
+            raise ValueError(f"Unknown basis function: {self.basis}. Must be None or 'se'.")
         basis_dim = Phi.shape[1]
+    
 
         if self.N_AR == 0:
             y_pred = self.model.predict(Phi)
@@ -94,10 +98,9 @@ class Base:
 
         return y_pred
 
-    def _se_basis(self, X, centres):
-        """ Squared exponential basis function
+    def _se_basis(self, X, centres, width=1):
+        """ Squared exponential basis function (with width=1 as default)
         """
-        width = 1
         dists = np.linalg.norm(X[:, np.newaxis, :] - centres[np.newaxis, :, :], axis=2)
         return np.exp(-0.5 * (dists / width) ** 2)
 
