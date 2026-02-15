@@ -2,19 +2,22 @@ import numpy as np
 from scipy.sparse.linalg import cg
 from sklearn.linear_model import LinearRegression as SK_LinearRegression
 from sklearn.linear_model import BayesianRidge
+from sklearn.cluster import KMeans
 
 class Base:
 
-    def __init__(self, N_AR):
+    def __init__(self, N_AR, basis=None):
             """
             Initialises the Regressor object.
 
             Parameters:
-            N_AR (int): Number of auto-regressive terms to include. Default is 0.
+            N_AR (int) : Number of auto-regressive terms to include.
+            basis : is None or "se" for squared exponential
             """
             if not isinstance(N_AR, int):
                 raise ValueError("N_AR must be an integer")
             self.N_AR = N_AR
+            self.basis = basis
 
     def _prepare_arx_data(self, X, y):
         """
@@ -58,24 +61,33 @@ class Base:
         numpy.ndarray: Predicted target values.
         """
         assert np.shape(X)[1] == self.D
-        
+
+        # Apply basis function
+        if self.basis is None:
+            Phi = X
+        elif self.basis == "se":
+            Phi = self._se_basis(X, self.centres)
+        else:
+            raise ValueError(f"Unknown basis function: {self.basis}. Must be None or 'se'.")
+        basis_dim = Phi.shape[1]
+    
 
         if self.N_AR == 0:
-            y_pred = self.model.predict(X)
+            y_pred = self.model.predict(Phi)
         else:
             assert len(y0) == self.N_AR
 
             y_pred = []
-            for t in range(self.N_AR, np.shape(X)[0] + self.N_AR):
+            for t in range(self.N_AR, np.shape(Phi)[0] + self.N_AR):
 
                 # First time step
                 if t == self.N_AR:
-                    u = np.hstack([X[0], y0])
-                    
+                    u = np.hstack([Phi[0], y0])
+
                 # Remaining time steps
                 else:
-                    u[:self.D] = X[t - self.N_AR]
-                    u[self.D:] = np.roll(u[self.D:], 1)
+                    u[:basis_dim] = Phi[t - self.N_AR]
+                    u[basis_dim:] = np.roll(u[basis_dim:], 1)
                     u[-1] = y
 
                 y = self.model.predict(u.reshape(1, -1))[0]               
@@ -86,15 +98,24 @@ class Base:
 
         return y_pred
 
+    def _se_basis(self, X, centres, width):
+        """ Squared exponential basis function
+        """
+        dists = np.linalg.norm(X[:, np.newaxis, :] - centres[np.newaxis, :, :], axis=2)
+        return np.exp(-0.5 * (dists / width) ** 2)
+
 class Linear(Base):
 
-    def train(self, X, y, positive=False):
+    def train(self, X, y, positive=False, **kwargs):
         """
         Trains the regressor using the provided data.
 
         Parameters:
         X (numpy.ndarray): Input data of shape (N, D).
         y (numpy.ndarray): Target data of shape (N,).
+        positive : if true, restricts all parameters to be positive
+        n_clusters : only relevant if using the squared exponential basis function;
+            is the number of cluster centres we look for in k-means
 
         Returns:
         None
@@ -102,11 +123,23 @@ class Linear(Base):
         # Size checks
         self.N, self.D = np.shape(X)
         assert y.shape == (self.N,)
-        if self.N_AR > 0:
-            X, y = self._prepare_arx_data(X, y)
+        
+        # Apply basis function
+        if self.basis is None:
+            Phi = X
+        if self.basis == "se":
+            self.centres = kwargs['centres']
+            Phi = self._se_basis(X, centres=self.centres, width=kwargs['width'])
 
+        # Get data into auto-regressive format
+        if self.N_AR > 0:
+            Phi, y = self._prepare_arx_data(Phi, y)
+
+        # Initialise
         self.model = SK_LinearRegression(positive=positive)
-        self.model.fit(X, y)
+
+        # Train model parameters
+        self.model.fit(Phi, y)
 
 class LinearBayes(Base):
 
